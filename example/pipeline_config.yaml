@@ -1,0 +1,29 @@
+labeling:
+  train_video_folder_path: "train_videos"
+  train_dataset_path: "train_dataset"
+  conf_threshold: 0.25
+  extraction_framerate: 5
+  eval_video_folder_path: "eval_videos"
+  eval_dataset_path: "eval_dataset"
+  max_sizes:
+    train_A: [22, 10]
+    train_B: [12, 13]
+    train_C: [142, 159]
+    train_D: [50, 25]
+    eval_A: [60, 110]
+  min_sizes:
+    eval_A: [19, 20]
+
+training:
+  train_dataset_path: "train_dataset"
+  model_save_path: "trained_models"
+  yolo_model_config: "yolo26s.yaml"
+
+detection:
+  video_path: "videos/train_A_640_360_30fps.mp4"
+  predictions_dir: "output_frames"
+
+
+evaluation:
+  test_data_dir: "test_frames"
+  

@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vehicle-detector"
+version = "0.1.0"
+description = "Vehicle detection using YOLOv8"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "numpy~=2.4.0",
+  "ultralytics==8.4.48",
+  "opencv-python~=4.13.0.92",
+  "pydantic~=2.13.4",
+  "pyyaml~=6.0.3",
+]
+
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+  "E",   # pycodestyle errors
+  "F",   # pyflakes
+  "W",   # pycodestyle warnings
+  "I",   # isort
+  "B",   # flake8-bugbear
+  "UP",  # pyupgrade
+]
+ignore = [
+  "E501",  # line too long (handled by formatter / often relaxed)
+]
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+exclude = [
+    "pyproject.toml",
+]
