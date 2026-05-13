@@ -64,9 +64,7 @@ def train_test_split(
         "path": str(Path(save_path).resolve()),
         "train": str(Path("train/images")),
         "val": str(Path("val/images")),
-        "names": {
-            0: class_name
-        }
+        "names": {0: class_name},
     }
 
     yaml_path = Path(save_path) / "dataset.yaml"

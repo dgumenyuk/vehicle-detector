@@ -19,11 +19,17 @@ training:
   model_save_path: "trained_models"
   yolo_model_config: "yolo26s.yaml"
 
-detection:
-  video_path: "videos/train_A_640_360_30fps.mp4"
-  predictions_dir: "output_frames"
-
 
 evaluation:
-  test_data_dir: "test_frames"
-  
+  eval_dataset_path: "eval_dataset"
+  eval_video_folder_path: "eval_videos"
+  model_path: "trained_models/20260512_222222.pt"
+  output_report_path: "eval_dataset/evaluation_metrics.md"
+  conf_threshold: 0.2
+  iou_threshold: 0.5
+  image_frequency_fps: 1.0
+  reference_object_length_m: 4.5
+  horizontal_fov_degrees: 90.0
+  distance_bands_m:
+    - [0, 200]
+    - [200, 400]

@@ -4,8 +4,6 @@ from pydantic import BaseModel
 from vehicle_detector.helpers import logger
 from vehicle_detector.pipelines import (
     BasePipeline,
-    DetectionPipeline,
-    DetectionPipelineConfig,
     EvaluationPipeline,
     EvaluationPipelineConfig,
     LabelingPipeline,
@@ -17,7 +15,6 @@ from vehicle_detector.pipelines import (
 
 class VehicleDetectorConfig(BaseModel):
     training: TrainingPipelineConfig | None = None
-    detection: DetectionPipelineConfig | None = None
     evaluation: EvaluationPipelineConfig | None = None
     labeling: LabelingPipelineConfig | None = None
 
@@ -43,7 +40,6 @@ class VehicleDetector:
         """Get the pipeline class for the given pipeline name."""
         pipeline_classes: dict[str, BasePipeline] = {
             "training": TrainingPipeline(),
-            "detection": DetectionPipeline(),
             "evaluation": EvaluationPipeline(),
             "labeling": LabelingPipeline(),
         }

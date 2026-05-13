@@ -1,4 +1,4 @@
-from fontTools import log
+import shutil
 from datetime import datetime
 from pathlib import Path
 
@@ -25,11 +25,29 @@ class TrainingPipeline(BasePipeline):
 
     def run(self) -> None:
         logger.info("Running training pipeline.")
-        # logger.info("Starting train-test split.")
-        # self.train_test_split()
-        # logger.info("Train-test split completed.")
+        logger.info("Starting train-test split.")
+        self.train_test_split()
+        logger.info("Train-test split completed.")
         logger.info("Starting model training.")
-        self.train_model()
+        model_id: str = self.train_model()
+        logger.info(f"Model training completed. Model ID: {model_id}")
+        logger.info("Copying trained model to target directory.")
+        self.copy_model_to_target_dir(model_id)
+
+    def copy_model_to_target_dir(self, model_id: str) -> None:
+        """Copies the trained model to the target directory."""
+        saved_model_path: Path = (
+            Path("runs")
+            / "detect"
+            / "trained_models"
+            / model_id
+            / "weights"
+            / "best.pt"
+        )
+        target_dir: Path = Path(self.config.model_save_path)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy(saved_model_path, target_dir / f"{model_id}.pt")
+        logger.info(f"Copied model to {target_dir / f'{model_id}.pt'}")
 
     def train_test_split(self) -> None:
         """Splits the dataset into a training and a test set."""
@@ -46,9 +64,22 @@ class TrainingPipeline(BasePipeline):
             class_name=self.config.class_name,
         )
 
-    def train_model(self) -> None:
+    def train_model(self) -> str:
         """Trains the model using the training data."""
-        dataset_yaml_path = Path(self.config.train_dataset_path) / "train_val_splits" / "dataset.yaml"
+        dataset_yaml_path = (
+            Path(self.config.train_dataset_path) / "train_val_splits" / "dataset.yaml"
+        )
         model = YOLO(self.config.yolo_model_config)
-        model_id: str =  datetime.now().strftime("%Y%m%d_%H%M%S")
-        model.train(data=dataset_yaml_path, epochs=50, project=self.config.model_save_path, name=model_id, mosaic=0, pretrained=False, translate=0, scale=0.1)
+        model_id: str = datetime.now().strftime("%Y%m%d_%H%M%S")
+        model.train(
+            data=dataset_yaml_path,
+            epochs=50,
+            project=self.config.model_save_path,
+            name=model_id,
+            mosaic=0.1,
+            pretrained=False,
+            translate=0,
+            scale=0.1,
+            degrees=180
+        )
+        return model_id
