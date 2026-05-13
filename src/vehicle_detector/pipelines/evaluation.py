@@ -198,7 +198,7 @@ class EvaluationPipeline:
             / box_width_px
         )
 
-        logger.info(f"Estimated distance: {distance_m:.2f} m for box width {box_width_px:.2f} px")
+        #logger.info(f"Estimated distance: {distance_m:.2f} m for box width {box_width_px:.2f} px")
 
         return distance_m
 

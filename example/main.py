@@ -15,8 +15,8 @@ if __name__ == "__main__":
     #training_pipeline: TrainingPipeline = vehicle_detector.training_pipeline
     # training_pipeline.run()
     evaluation_pipeline: EvaluationPipeline = vehicle_detector.evaluation_pipeline
-    #evaluation_pipeline.run()
-    evaluation_pipeline.visualize_predictions()
+    evaluation_pipeline.run()
+    #evaluation_pipeline.visualize_predictions()
     # labeling_pipeline.visualize_predictions()
     # labeling_pipeline.run()
     # labeling_pipeline.remove_items_by_id(item_id_list=["train_C_640_360_24fps_000004", "train_C_640_360_24fps_000005", "train_C_640_360_24fps_000006",

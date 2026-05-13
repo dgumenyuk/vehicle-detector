@@ -73,13 +73,12 @@ class TrainingPipeline(BasePipeline):
         model_id: str = datetime.now().strftime("%Y%m%d_%H%M%S")
         model.train(
             data=dataset_yaml_path,
-            epochs=50,
+            epochs=60,
             project=self.config.model_save_path,
             name=model_id,
-            mosaic=0.1,
+            mosaic=0,
             pretrained=False,
             translate=0,
             scale=0.1,
-            degrees=180
         )
         return model_id

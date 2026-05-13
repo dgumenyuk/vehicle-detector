@@ -23,7 +23,7 @@ training:
 evaluation:
   eval_dataset_path: "eval_dataset"
   eval_video_folder_path: "eval_videos"
-  model_path: "trained_models/20260512_222222.pt"
+  model_path: "trained_models/20260512_222222.pt" 
   output_report_path: "eval_dataset/evaluation_metrics.md"
   conf_threshold: 0.2
   iou_threshold: 0.5
