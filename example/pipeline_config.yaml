@@ -23,12 +23,12 @@ training:
 evaluation:
   eval_dataset_path: "eval_dataset"
   eval_video_folder_path: "eval_videos"
-  model_path: "trained_models/20260512_222222.pt" 
+  model_path: "trained_models/20260512.pt" 
   output_report_path: "eval_dataset/evaluation_metrics.md"
   conf_threshold: 0.2
   iou_threshold: 0.5
   image_frequency_fps: 1.0
-  reference_object_length_m: 4.5
+  reference_object_width_m: 4.5
   horizontal_fov_degrees: 90.0
   distance_bands_m:
     - [0, 200]

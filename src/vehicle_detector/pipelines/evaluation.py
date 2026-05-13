@@ -27,8 +27,10 @@ class EvaluationPipeline:
         self.config = EvaluationPipelineConfig(**config)
         logger.info("Initialized evaluation pipeline.")
 
-    def visualize_predictions(self) -> None:
+    def visualize_predictions(self, save: bool = False) -> None:
         video_dir = Path(self.config.eval_video_folder_path)
+        save_dir = Path(self.config.eval_dataset_path) / "prediction_visualizations"
+        save_dir.mkdir(parents=True, exist_ok=True)
         for video_path in video_dir.iterdir():
             if not video_path.is_file():
                 continue
@@ -37,6 +39,9 @@ class EvaluationPipeline:
                 video_path=str(video_path),
                 model_path=self.config.model_path,
                 conf=self.config.conf_threshold,
+                save_video=save,
+                output_path=save_dir / f"{video_path.stem}.mp4",
+                show_label=False,
             )
 
     def run(self):
@@ -51,7 +56,6 @@ class EvaluationPipeline:
                 "TP": 0,
                 "FP": 0,
                 "FN": 0,
-                "frames": 0,
                 "first_gt_frame": None,
                 "first_detection_frame": None,
             },
@@ -59,7 +63,6 @@ class EvaluationPipeline:
                 "TP": 0,
                 "FP": 0,
                 "FN": 0,
-                "frames": 0,
                 "first_gt_frame": None,
                 "first_detection_frame": None,
             },
@@ -92,8 +95,6 @@ class EvaluationPipeline:
 
                 if band is None:
                     continue
-
-                stats[band]["frames"] += 1
 
                 if stats[band]["first_gt_frame"] is None:
                     stats[band]["first_gt_frame"] = frame_id
@@ -193,12 +194,8 @@ class EvaluationPipeline:
         focal_length_px = image_width / (2 * np.tan(fov_rad / 2))
 
         distance_m = (
-            self.config.reference_object_width_m
-            * focal_length_px
-            / box_width_px
+            self.config.reference_object_width_m * focal_length_px / box_width_px
         )
-
-        #logger.info(f"Estimated distance: {distance_m:.2f} m for box width {box_width_px:.2f} px")
 
         return distance_m
 

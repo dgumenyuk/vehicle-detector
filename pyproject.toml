@@ -7,7 +7,7 @@ name = "vehicle-detector"
 version = "0.1.0"
 description = "Vehicle detection using YOLOv8"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 dependencies = [
   "numpy~=2.4.0",
   "ultralytics==8.4.48",
@@ -21,7 +21,7 @@ dependencies = [
 include-package-data = true
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py314"
 line-length = 88
 
 [tool.ruff.lint]

@@ -11,8 +11,9 @@ def run_yolo_on_video(
     video_path: str,
     model_path: str | None = None,
     save_video: bool = False,
-    output_path: str = "annotated_output.mp4",
+    output_path: str | Path = "annotated_output.mp4",
     conf: float = 0.25,
+    show_label: bool = True,
 ) -> None:
 
     if model_path is None:
@@ -20,7 +21,7 @@ def run_yolo_on_video(
     else:
         model = YOLO(model_path)
 
-    cap = cv2.VideoCapture(video_path)
+    cap = cv2.VideoCapture(str(video_path))
 
     if not cap.isOpened():
         raise ValueError(f"Could not open video: {video_path}")
@@ -34,7 +35,7 @@ def run_yolo_on_video(
     if save_video:
         fourcc = cv2.VideoWriter_fourcc(*"mp4v")
         writer = cv2.VideoWriter(
-            output_path,
+            str(output_path),
             fourcc,
             fps,
             (frame_width, frame_height),
@@ -60,8 +61,6 @@ def run_yolo_on_video(
                 box_width = x2 - x1
                 box_height = y2 - y1
 
-                label = f"{box_width}x{box_height} px"
-
                 # Draw bounding box
                 cv2.rectangle(
                     annotated,
@@ -70,26 +69,27 @@ def run_yolo_on_video(
                     (0, 255, 0),
                     2,
                 )
+                if show_label:
+                    label = f"{box_width}x{box_height} px"
+                    # Draw label background
+                    cv2.rectangle(
+                        annotated,
+                        (x1, y1 - 25),
+                        (x1 + 110, y1),
+                        (0, 255, 0),
+                        -1,
+                    )
 
-                # Draw label background
-                cv2.rectangle(
-                    annotated,
-                    (x1, y1 - 25),
-                    (x1 + 110, y1),
-                    (0, 255, 0),
-                    -1,
-                )
-
-                # Draw size text
-                cv2.putText(
-                    annotated,
-                    label,
-                    (x1, y1 - 7),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6,
-                    (0, 0, 0),
-                    2,
-                )
+                    # Draw size text
+                    cv2.putText(
+                        annotated,
+                        label,
+                        (x1, y1 - 7),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        (0, 0, 0),
+                        2,
+                    )
 
         cv2.imshow("detections", annotated)
 
