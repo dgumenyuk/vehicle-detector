@@ -1,35 +1,100 @@
 # Vehicle Detector
 
-Vehicle detection pipeline built around YOLO. The project can:
+Vehicle detection pipeline built around YOLO.
+Pipeline performs the following steps:
 
-- extract frames from training and evaluation videos
-- create YOLO-format vehicle labels
-- train a YOLO model
-- evaluate detections across distance bands, currently `0-200 m` and `200-400 m`
+- extract frames from training and evaluation videos with a specified framerate i.e. `5 fps`;
+- create YOLO-format vehicle labels based on the predictions of a pre-trained YOLO model, namely `yolo26s.yaml` from Ultralytics for the frames from training and evaluation videos; the generated labels are not fully accurate;
+- anomalous labels are automatically removed if their dimensions do not match the expected size of the object bounding box;
+- frames with no labels are removed from the training and evaluation datasets;
+- train a YOLO model from the generated training dataset; model is trained from scratch, no pre-trained weights are used;
+- evaluate model performance across distance bands, specifically `0-200 m` and `200-400 m` on the generated evaluation dataset;
 - report precision, detection rate, false alarms per minute, and time to first detection
 
 
-## Installation
+## Design choices
 
-From the project root:
+### Implementation
+1. The vehicle detector is implemented as a python library. The main class is `VehicleDetector`, which takes a configuration yaml file as input and initializes the pipelines. The pipelines are implemented as separate classes: `LabelingPipeline`, `TrainingPipeline`, and `EvaluationPipeline`. This design allows for modularity and automated execution of the whole process: from dataset pseudo-labeling to model training and evaluation.
+2. All the hyperparameters and paths are configured in a single yaml file. This allows for easy experimentation and reproducibility.
 
-```powershell
-uv sync --all-groups
+### Labeling and dataset creation
+3. The labeling pipeline uses a pre-trained YOLO model to generate labels for the training and evaluation datasets. 
+4. To improve the labelling quality, three measures are taken: first, the reasonable bounding box sizes are estimated by observing the predictions from the pseudo-labeling pipeline. Then, the generated labels are filtered by removing those with bounding box dimensions that do not match the expected size of the object bounding box. 
+5. All the labels are visualized on the images for manual inspection. Images with anomalous labels are identified and removed from the dataset. 
+6. Finally, images with no labels are removed from the datasets.
+
+### Model training
+7. The chosen object detection model is YOLOv26s from Ultralytics, which is a smaller version of the most recent YOLOv26 architecture.
+8. Video size and thus the image resolution was chosen to be `640x360` as a compromise between computational efficiency and level of detail in the images. 
+9. A new evaluation video was added, which contains more vehicles at farther distances.
+
+### Evaluation metrics
+
+10. The distance estimation function uses the apparent width of a detected object in the image to approximate its distance from the camera. The method is based on the pinhole camera model:
+
+$$
+Z = \frac{W \cdot f}{w}
+$$
+
+where:
+
+- $Z$ is the estimated distance to the object in meters.
+- $W$ is the assumed real-world width of the object in meters.
+- $f$ is the camera focal length in pixels.
+- $w$ is the apparent object width in the image, measured in pixels.
+
+In the implementation:
+
+```python
+distance_m = reference_object_width_m * focal_length_px / box_width_px
 ```
+The parameter `reference_object_width_m` is set to **4.5 meters** as an approximate real-world width reference.
 
-Or with pip:
+The parameter `horizontal_fov_degrees` is set to **90 degrees** to approximate the horizontal field of view of the camera, selected based on the common FOV values for dash cameras.
 
-```powershell
-pip install .
-```
+Since the focal length in pixels is not directly known, it is computed from the image width and the horizontal field of view:
 
+$$
+f = \frac{\text{image width}}{2 \tan(\text{FOV}/2)}
+$$
+## Execution
+
+### Installation
+
+THis priject was tested on Windows and Ubuntu with python vesrions 3.12 - 3.14. Recommended python version is 3.14.
 Main dependencies are listed in `pyproject.toml`, including `ultralytics`, `opencv-python`, `numpy`, `pydantic`, and `pyyaml`.
 
-## Configuration
+We recommend using `uv` for dependency management. Install with:
 
-Edit [example/pipeline_config.yaml](example/pipeline_config.yaml) before running a pipeline.
+```bash
+uv sync --all-groups
+```
+Pip or another package manager (e.g. conda) can also be used to install the package:
 
-Important sections:
+```bash
+pip install .
+```
+Activate your virtual environment with:
+
+```bash
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate  # Windows
+```
+Run the example pipeline with:
+
+```bash
+python example/main.py
+```
+Model training step is ommitted by default from the pipeline, as without good GPU it can take a long time. To include it, uncomment the corresponding lines in `example/main.py`. It is also recommended to ensure that the pytorch installation is compatible with the GPU and CUDA version on your machine. You can find the compatible versions on the [PyTorch website](https://pytorch.org/get-started/locally/).
+
+We trained the model using the google collab, here is the [notebook link](https://colab.research.google.com/drive/1qq6bIQVQL3RYfCQWHDz4uGJAh3JYTa7-?usp=sharing) with the executable example. Make sure to connect to a runtime with GPU. 
+
+
+### Configuration
+
+Edit [example/pipeline_config.yaml](example/pipeline_config.yaml) for configuring custom pipiline parameters.
+By defaut, the following parameters are set:
 
 ```yaml
 labeling:
@@ -51,12 +116,12 @@ evaluation:
   model_path: "trained_models/your_model.pt"
   conf_threshold: 0.2
   iou_threshold: 0.5
-  image_frequency_fps: 1.0
+  image_frequency_fps: 5.0
   reference_object_width_m: 4.5
   horizontal_fov_degrees: 90.0
 ```
 
-## Running
+## Workflow
 
 The example runner is [example/main.py](example/main.py). Uncomment the pipeline you want to run.
 
@@ -94,62 +159,26 @@ False alarms   = FP * 60 * image_frequency_fps / N_frames
 Time to first detection = (first_detection_frame - first_gt_frame) / image_frequency_fps
 ```
 
-`N_frames` is the number of evaluated image frames.
+`N_frames` is the total number of evaluated image frames.
 
-## Distance Estimation
 
-Evaluation separates objects into distance bands. The distance is estimated from the width of the bounding box in pixels.
 
-The code assumes:
+## Results
 
-- the real-world width of the object is known, configured as `reference_object_width_m`
-- the camera horizontal field of view is known, configured as `horizontal_fov_degrees`
-- objects farther away appear smaller in the image
-- the measured box width is a reasonable approximation of the object's visible width
+1. Examples of model performance on the validation data (from the train videos) are shown in `trained_models` folder.
+This folder also contains the trained model weights and the training logs.
+The achieved performance on the validation data is around 0.82 mAP@0.5.
+2. Performance of the model on the evaluation videos is shown in `demo` folder (recordings with model predictions).
+They can be reproduced by running this step of the evaluation pipeline:
 
-First, the camera focal length is estimated in pixels:
-
-```text
-focal_length_px = image_width_px / (2 * tan(horizontal_fov_radians / 2))
+```python
+evaluation_pipeline: EvaluationPipeline = vehicle_detector.evaluation_pipeline
+evaluation_pipeline.visualize_predictions(save=True)
 ```
 
-Then object distance is estimated with the pinhole camera relationship:
+3. The evaluation metrics:
 
-```text
-distance_m = reference_object_width_m * focal_length_px / box_width_px
-```
-
-Where:
-
-- `reference_object_width_m` is the assumed real object width, for example car width or vehicle length depending on how boxes are viewed
-- `box_width_px` is `x2 - x1` from the bounding box
-- `image_width_px` is the width of the frame
-- `horizontal_fov_radians` is `horizontal_fov_degrees` converted to radians
-
-Example:
-
-```text
-image_width_px = 640
-horizontal_fov_degrees = 90
-reference_object_width_m = 4.5
-box_width_px = 72
-
-focal_length_px = 640 / (2 * tan(90 / 2)) = 320
-distance_m = 4.5 * 320 / 72 = 20 m
-```
-
-After estimating distance, the object is assigned to a band:
-
-```text
-0 <= distance < 200    -> 0-200 m
-200 <= distance < 400  -> 200-400 m
-```
-
-This is an approximation. It is sensitive to the chosen reference width, camera FOV, camera calibration, object orientation, and whether the box width truly represents the physical dimension being used.
-
-## Notes
-
-- The project currently treats vehicles as a single class.
-- Evaluation reads images from `eval_dataset/images` and labels from `eval_dataset/labels`.
-- The model path in `pipeline_config.yaml` must point to an existing YOLO `.pt` file.
-- For better distance estimates, calibrate the camera or tune `reference_object_width_m` and `horizontal_fov_degrees` using objects at known distances.
+| Distance range | Precision | Detection rate | False alarms / min | Time to first detection | TP | FP | FN |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0–200 m | 0.240 | 0.113 | 287.973 | 1.000 s | 136 | 431 | 1069 |
+| 200–400 m | 1.000 | 0.007 | 0.000 | 0.200 s | 12 | 0 | 1633 |

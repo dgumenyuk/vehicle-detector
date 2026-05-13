@@ -130,6 +130,8 @@ class EvaluationPipeline:
                 if band is not None:
                     stats[band]["FP"] += 1
 
+        logger.info("Evaluation completed. Results:")
+
         self.print_results(stats, n_frames=len(image_paths))
 
     def load_ground_truth(self, label_path, image_width, image_height):

@@ -35,7 +35,7 @@ class LabelingPipeline(BasePipeline):
             config (dict): Labeling pipeline configuration dictionary.
         """
         self.config = LabelingPipelineConfig(**config)
-        logger.info("Initialized LabelingPipeline.")
+        logger.info("Initialized labeling pipeline.")
 
     def run(self) -> None:
         logger.info("Running labeling pipeline")

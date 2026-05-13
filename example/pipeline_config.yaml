@@ -27,7 +27,7 @@ evaluation:
   output_report_path: "eval_dataset/evaluation_metrics.md"
   conf_threshold: 0.2
   iou_threshold: 0.5
-  image_frequency_fps: 1.0
+  image_frequency_fps: 5.0
   reference_object_width_m: 4.5
   horizontal_fov_degrees: 90.0
   distance_bands_m:
